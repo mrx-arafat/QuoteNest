@@ -139,4 +139,44 @@ const theme = {
   },
 };
 
+export const lightTheme = {
+  primary: "#6d4ce3",
+  secondary: "#5a3dd1",
+  background: "#f9f9fb",
+  surface: "#ffffff",
+  text: "#333333",
+  textSecondary: "#555555",
+  border: "#e1e1e1",
+  success: "#38c172",
+  error: "#e74c3c",
+  warning: "#f39c12",
+  info: "#3498db",
+  tagBackground: "#f0f0ff",
+  tagText: "#6d4ce3",
+  shadow: "0 4px 12px rgba(0, 0, 0, 0.05)",
+  headerShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
+  cardHover: "0 8px 24px rgba(0, 0, 0, 0.12)",
+  transition: "all 0.3s ease",
+};
+
+export const darkTheme = {
+  primary: "#8a6aff",
+  secondary: "#6d4ce3",
+  background: "#121212",
+  surface: "#1e1e1e",
+  text: "#f5f5f5",
+  textSecondary: "#b3b3b3",
+  border: "#2a2a2a",
+  success: "#38c172",
+  error: "#e74c3c",
+  warning: "#f39c12",
+  info: "#3498db",
+  tagBackground: "#2a2248",
+  tagText: "#a694f2",
+  shadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
+  headerShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
+  cardHover: "0 8px 24px rgba(0, 0, 0, 0.25)",
+  transition: "all 0.3s ease",
+};
+
 export default theme;
