@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import styled from "styled-components";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { quoteService } from "../services/api";
 
 const PageContainer = styled.div`
   padding: 2rem 0;
@@ -113,6 +113,14 @@ const SubmitButton = styled.button`
   }
 `;
 
+const ErrorMessage = styled.div`
+  color: #e74c3c;
+  background-color: #fdecea;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+`;
+
 const AddQuote = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -120,9 +128,11 @@ const AddQuote = () => {
     author: "",
     book: "",
     tags: [],
+    favorite: false,
   });
   const [currentTag, setCurrentTag] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -151,38 +161,22 @@ const AddQuote = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(null);
 
     // Validate form
     if (!formData.quote || !formData.author) {
-      alert("Quote and author are required");
+      setError("Quote and author are required");
       return;
     }
 
     setLoading(true);
 
-    // In a real application, you would submit to the API
-    // For demonstration, we're just simulating an API call
-
     try {
-      // Mocked successful API call
-      console.log("Submitting quote:", formData);
-
-      // Simulate API response delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Success response - redirect to quotes page
+      await quoteService.createQuote(formData);
       navigate("/my-quotes");
-
-      // Actual API call would look like this:
-      /*
-      const response = await axios.post('http://localhost:5000/api/quotes', formData);
-      if (response.status === 201) {
-        navigate('/my-quotes');
-      }
-      */
     } catch (error) {
       console.error("Error adding quote:", error);
-      alert("Failed to add quote. Please try again.");
+      setError("Failed to add quote. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -192,6 +186,8 @@ const AddQuote = () => {
     <PageContainer>
       <PageTitle>Add New Quote</PageTitle>
       <FormContainer>
+        {error && <ErrorMessage>{error}</ErrorMessage>}
+
         <form onSubmit={handleSubmit}>
           <FormGroup>
             <Label htmlFor="quote">Quote</Label>
@@ -249,6 +245,20 @@ const AddQuote = () => {
                 </Tag>
               ))}
             </TagInput>
+          </FormGroup>
+
+          <FormGroup>
+            <Label>
+              <input
+                type="checkbox"
+                name="favorite"
+                checked={formData.favorite}
+                onChange={(e) =>
+                  setFormData({ ...formData, favorite: e.target.checked })
+                }
+              />{" "}
+              Add to Favorites
+            </Label>
           </FormGroup>
 
           <SubmitButton type="submit" disabled={loading}>

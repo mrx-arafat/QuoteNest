@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import styled from "styled-components";
+import axios from "axios";
 
 const HeaderContainer = styled.header`
   display: flex;
@@ -29,7 +30,7 @@ const StatusDot = styled.div`
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background-color: #4caf50;
+  background-color: ${(props) => (props.connected ? "#4caf50" : "#e74c3c")};
 `;
 
 const Nav = styled.nav`
@@ -56,6 +57,27 @@ const Tab = styled(Link)`
 
 const Header = () => {
   const location = useLocation();
+  const [apiConnected, setApiConnected] = useState(false);
+
+  useEffect(() => {
+    // Check API connection
+    const checkApiConnection = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000");
+        setApiConnected(response.status === 200);
+      } catch (error) {
+        setApiConnected(false);
+      }
+    };
+
+    // Check connection when component mounts
+    checkApiConnection();
+
+    // Set up interval to check connection status
+    const interval = setInterval(checkApiConnection, 30000); // Check every 30 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <HeaderContainer>
@@ -78,8 +100,8 @@ const Header = () => {
       </Nav>
 
       <ApiStatus>
-        <StatusDot />
-        API Connected
+        <StatusDot connected={apiConnected} />
+        {apiConnected ? "API Connected" : "API Disconnected"}
       </ApiStatus>
     </HeaderContainer>
   );

@@ -3,14 +3,20 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 require("dotenv").config();
 
+// Import routes
+const quotesRoutes = require("./routes/quotes");
+
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Test route
+// Routes
 app.get("/", (req, res) => {
-  res.send("API is running");
+  res.send("QuoteNest API is running");
 });
+
+// Use routes
+app.use("/api/quotes", quotesRoutes);
 
 // Connect to MongoDB and start server
 const PORT = process.env.PORT || 5000;

@@ -2,7 +2,7 @@ import axios from "axios";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
 
-// Create axios instance
+// Create axios instance with interceptors for error handling
 const api = axios.create({
   baseURL: API_URL,
   headers: {
@@ -10,15 +10,33 @@ const api = axios.create({
   },
 });
 
+// Add response interceptor for error handling
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Handle API errors
+    const customError = {
+      message: error.response?.data?.message || "Something went wrong",
+      status: error.response?.status || 500,
+    };
+
+    // Log error
+    console.error("API Error:", customError);
+
+    return Promise.reject(customError);
+  }
+);
+
 // Quotes API
 export const quoteService = {
-  // Get all quotes
-  getQuotes: async () => {
+  // Get all quotes, optionally with endpoint suffix (e.g., "/favorites")
+  getQuotes: async (endpoint = "", page = 1, limit = 10) => {
     try {
-      const response = await api.get("/quotes");
+      const response = await api.get(
+        `/quotes${endpoint}?page=${page}&limit=${limit}`
+      );
       return response.data;
     } catch (error) {
-      console.error("Error fetching quotes:", error);
       throw error;
     }
   },
@@ -29,7 +47,6 @@ export const quoteService = {
       const response = await api.get(`/quotes/${id}`);
       return response.data;
     } catch (error) {
-      console.error(`Error fetching quote with id ${id}:`, error);
       throw error;
     }
   },
@@ -40,7 +57,6 @@ export const quoteService = {
       const response = await api.post("/quotes", quoteData);
       return response.data;
     } catch (error) {
-      console.error("Error creating quote:", error);
       throw error;
     }
   },
@@ -51,7 +67,16 @@ export const quoteService = {
       const response = await api.put(`/quotes/${id}`, quoteData);
       return response.data;
     } catch (error) {
-      console.error(`Error updating quote with id ${id}:`, error);
+      throw error;
+    }
+  },
+
+  // Toggle favorite status
+  toggleFavorite: async (id) => {
+    try {
+      const response = await api.patch(`/quotes/${id}/favorite`);
+      return response.data;
+    } catch (error) {
       throw error;
     }
   },
@@ -62,18 +87,32 @@ export const quoteService = {
       const response = await api.delete(`/quotes/${id}`);
       return response.data;
     } catch (error) {
-      console.error(`Error deleting quote with id ${id}:`, error);
       throw error;
     }
   },
 
   // Get quotes by tag
-  getQuotesByTag: async (tag) => {
+  getQuotesByTag: async (tag, page = 1, limit = 10) => {
     try {
-      const response = await api.get(`/quotes/tags/${tag}`);
+      const response = await api.get(
+        `/quotes/tags/${tag}?page=${page}&limit=${limit}`
+      );
       return response.data;
     } catch (error) {
-      console.error(`Error fetching quotes with tag ${tag}:`, error);
+      throw error;
+    }
+  },
+
+  // Search quotes (by text, author, etc.)
+  searchQuotes: async (searchTerm, page = 1, limit = 10) => {
+    try {
+      const response = await api.get(
+        `/quotes/search?q=${encodeURIComponent(
+          searchTerm
+        )}&page=${page}&limit=${limit}`
+      );
+      return response.data;
+    } catch (error) {
       throw error;
     }
   },
