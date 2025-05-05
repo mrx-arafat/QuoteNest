@@ -1,10 +1,13 @@
 import React, { useState, useRef } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-toastify";
 import { FiX, FiPlus, FiSave, FiArrowLeft } from "react-icons/fi";
 import { quoteService } from "../services/api";
+import PageTransition from "../components/ui/PageTransition";
+import SuccessPage from "../components/SuccessPage";
+import { useThemeContext } from "../context/ThemeContext";
 
 const PageContainer = styled(motion.div)`
   padding: 2rem 0;
@@ -344,6 +347,7 @@ const AddTagButton = styled.button`
 
 const AddQuote = () => {
   const navigate = useNavigate();
+  const { theme } = useThemeContext();
   const [formData, setFormData] = useState({
     quote: "",
     author: "",
@@ -355,6 +359,8 @@ const AddQuote = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const tagInputRef = useRef(null);
+  const [success, setSuccess] = useState(false);
+  const [savedQuote, setSavedQuote] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -408,9 +414,18 @@ const AddQuote = () => {
     setLoading(true);
 
     try {
-      await quoteService.createQuote(formData);
+      const response = await quoteService.createQuote(formData);
+
+      // Save the quote for the success page
+      setSavedQuote({
+        text: formData.quote,
+        author: formData.author,
+        category: formData.tags.length > 0 ? formData.tags[0] : null,
+      });
+
+      // Show success view instead of redirecting
+      setSuccess(true);
       toast.success("Quote added successfully!");
-      navigate("/my-quotes");
     } catch (error) {
       console.error("Error adding quote:", error);
       setError(
@@ -423,151 +438,160 @@ const AddQuote = () => {
     }
   };
 
+  // If success, display the SuccessPage
+  if (success) {
+    return <SuccessPage quote={savedQuote} />;
+  }
+
   return (
-    <PageContainer
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.3 }}
-    >
-      <PageHeader>
-        <PageTitle>Add New Quote</PageTitle>
-        <BackButton
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.97 }}
-          onClick={() => navigate(-1)}
-        >
-          <FiArrowLeft /> Back
-        </BackButton>
-      </PageHeader>
-
-      <FormContainer
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.1 }}
-      >
-        {error && (
-          <ErrorMessage
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3 }}
+    <PageTransition>
+      <PageContainer>
+        <PageHeader>
+          <PageTitle>Add New Quote</PageTitle>
+          <BackButton
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => navigate(-1)}
           >
-            {error}
-          </ErrorMessage>
-        )}
+            <FiArrowLeft /> Back
+          </BackButton>
+        </PageHeader>
 
-        <form onSubmit={handleSubmit}>
-          <FormGroup>
-            <Label htmlFor="quote">Quote</Label>
-            <Textarea
-              id="quote"
-              name="quote"
-              value={formData.quote}
-              onChange={handleChange}
-              placeholder="Enter the quote text"
-              required
-            />
-          </FormGroup>
+        <FormContainer
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+        >
+          {error && (
+            <ErrorMessage
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              {error}
+            </ErrorMessage>
+          )}
 
-          <FormGroup>
-            <Label htmlFor="author">Author</Label>
-            <Input
-              id="author"
-              name="author"
-              value={formData.author}
-              onChange={handleChange}
-              placeholder="Enter the author's name"
-              required
-            />
-          </FormGroup>
-
-          <FormGroup>
-            <Label htmlFor="book">Book/Source</Label>
-            <Input
-              id="book"
-              name="book"
-              value={formData.book}
-              onChange={handleChange}
-              placeholder="Where is this quote from? (optional)"
-            />
-          </FormGroup>
-
-          <FormGroup>
-            <Label htmlFor="tags">Tags</Label>
-            <TagInputContainer>
-              <TagInputWrapper>
-                <TagList>
-                  {formData.tags.map((tag, index) => (
-                    <Tag
-                      key={index}
-                      initial={{ scale: 0, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      exit={{ scale: 0, opacity: 0 }}
-                      layout
-                    >
-                      {tag}
-                      <TagRemoveButton
-                        type="button"
-                        onClick={() => removeTag(tag)}
-                      >
-                        <FiX size={14} />
-                      </TagRemoveButton>
-                    </Tag>
-                  ))}
-                </TagList>
-                <TagInput
-                  id="tags"
-                  ref={tagInputRef}
-                  value={currentTag}
-                  onChange={(e) => setCurrentTag(e.target.value)}
-                  onKeyDown={handleTagKeyDown}
-                  placeholder="Add tags..."
-                />
-                <AddTagButton
-                  type="button"
-                  onClick={addTag}
-                  aria-label="Add tag"
-                >
-                  <FiPlus size={18} />
-                </AddTagButton>
-              </TagInputWrapper>
-            </TagInputContainer>
-          </FormGroup>
-
-          <FavoriteToggle>
-            <Switch>
-              <SwitchInput
-                type="checkbox"
-                checked={formData.favorite}
-                onChange={toggleFavorite}
+          <form onSubmit={handleSubmit}>
+            <FormGroup>
+              <Label htmlFor="quote">Quote</Label>
+              <Textarea
+                id="quote"
+                name="quote"
+                value={formData.quote}
+                onChange={handleChange}
+                placeholder="Enter the quote text"
+                required
               />
-              <SwitchSlider />
-            </Switch>
-            <SwitchLabel>Add to favorites</SwitchLabel>
-          </FavoriteToggle>
+            </FormGroup>
 
-          <FormActions>
-            <CancelButton
-              type="button"
-              onClick={() => navigate(-1)}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              Cancel
-            </CancelButton>
-            <SubmitButton
-              type="submit"
-              disabled={loading}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <FiSave size={18} />
-              {loading ? "Saving..." : "Save Quote"}
-            </SubmitButton>
-          </FormActions>
-        </form>
-      </FormContainer>
-    </PageContainer>
+            <FormGroup>
+              <Label htmlFor="author">Author</Label>
+              <Input
+                id="author"
+                name="author"
+                value={formData.author}
+                onChange={handleChange}
+                placeholder="Enter the author's name"
+                required
+              />
+            </FormGroup>
+
+            <FormGroup>
+              <Label htmlFor="book">Book/Source</Label>
+              <Input
+                id="book"
+                name="book"
+                value={formData.book}
+                onChange={handleChange}
+                placeholder="Where is this quote from? (optional)"
+              />
+            </FormGroup>
+
+            <FormGroup>
+              <Label htmlFor="tags">Tags</Label>
+              <TagInputContainer>
+                <TagInputWrapper>
+                  <TagList>
+                    {formData.tags.map((tag, index) => (
+                      <Tag
+                        key={index}
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0, opacity: 0 }}
+                        layout
+                        theme={theme}
+                      >
+                        {tag}
+                        <TagRemoveButton
+                          type="button"
+                          onClick={() => removeTag(tag)}
+                          theme={theme}
+                        >
+                          <FiX size={14} />
+                        </TagRemoveButton>
+                      </Tag>
+                    ))}
+                  </TagList>
+                  <TagInput
+                    id="tags"
+                    ref={tagInputRef}
+                    value={currentTag}
+                    onChange={(e) => setCurrentTag(e.target.value)}
+                    onKeyDown={handleTagKeyDown}
+                    placeholder="Add tags..."
+                    theme={theme}
+                  />
+                  <AddTagButton
+                    type="button"
+                    onClick={addTag}
+                    aria-label="Add tag"
+                    theme={theme}
+                  >
+                    <FiPlus size={18} />
+                  </AddTagButton>
+                </TagInputWrapper>
+              </TagInputContainer>
+            </FormGroup>
+
+            <FavoriteToggle>
+              <Switch>
+                <SwitchInput
+                  type="checkbox"
+                  checked={formData.favorite}
+                  onChange={toggleFavorite}
+                  theme={theme}
+                />
+                <SwitchSlider theme={theme} />
+              </Switch>
+              <SwitchLabel theme={theme}>Add to favorites</SwitchLabel>
+            </FavoriteToggle>
+
+            <FormActions>
+              <CancelButton
+                type="button"
+                onClick={() => navigate(-1)}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                theme={theme}
+              >
+                Cancel
+              </CancelButton>
+              <SubmitButton
+                type="submit"
+                disabled={loading}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                theme={theme}
+              >
+                <FiSave size={18} />
+                {loading ? "Saving..." : "Save Quote"}
+              </SubmitButton>
+            </FormActions>
+          </form>
+        </FormContainer>
+      </PageContainer>
+    </PageTransition>
   );
 };
 

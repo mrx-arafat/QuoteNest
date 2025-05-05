@@ -10,6 +10,7 @@ import Home from "./pages/Home";
 import AddQuote from "./pages/AddQuote";
 import MyQuotes from "./pages/MyQuotes";
 import NotFound from "./pages/NotFound";
+import ParallaxBackground from "./components/ui/ParallaxBackground";
 
 // Context & Styles
 import { ThemeProvider } from "./context/ThemeContext";
@@ -20,12 +21,15 @@ const AppContainer = styled.div`
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 20px;
+  position: relative;
+  z-index: 1;
 `;
 
 const App = () => {
   return (
     <ThemeProvider>
       <GlobalStyles />
+      <ParallaxBackground />
       <Router>
         <Header />
         <AppContainer>

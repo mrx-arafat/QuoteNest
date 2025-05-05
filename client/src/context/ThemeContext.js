@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect, useContext } from "react";
 import { ThemeProvider as StyledThemeProvider } from "styled-components";
 import { lightTheme, darkTheme } from "../styles/theme";
 
@@ -6,6 +6,9 @@ export const ThemeContext = createContext({
   theme: "light",
   toggleTheme: () => {},
 });
+
+// Add a custom hook to use the theme context
+export const useThemeContext = () => useContext(ThemeContext);
 
 export const ThemeProvider = ({ children }) => {
   // Check local storage for saved theme preference
