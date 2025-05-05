@@ -7,8 +7,31 @@ require("dotenv").config();
 const quotesRoutes = require("./routes/quotes");
 
 const app = express();
+
+// Middleware
 app.use(cors());
-app.use(express.json());
+
+// Enhanced JSON parsing with error handling
+app.use(
+  express.json({
+    limit: "10mb",
+    verify: (req, res, buf, encoding) => {
+      try {
+        JSON.parse(buf);
+      } catch (e) {
+        console.error("Invalid JSON in request body");
+        res.status(400).json({ message: "Invalid JSON in request body" });
+        throw new Error("Invalid JSON");
+      }
+    },
+  })
+);
+
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  next();
+});
 
 // Routes
 app.get("/", (req, res) => {
@@ -17,6 +40,12 @@ app.get("/", (req, res) => {
 
 // Use routes
 app.use("/api/quotes", quotesRoutes);
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error("Server error:", err);
+  res.status(500).json({ message: "Server error", error: err.message });
+});
 
 // Connect to MongoDB and start server
 const PORT = process.env.PORT || 5000;

@@ -129,10 +129,28 @@ router.get("/:id", async (req, res) => {
 // Create a new quote
 router.post("/", async (req, res) => {
   try {
+    console.log("Received quote creation request with body:", req.body);
+
+    // Validate the request body
+    if (!req.body.quote || !req.body.author) {
+      console.log("Validation failed: Missing required fields");
+      return res.status(400).json({
+        message: "Quote and author are required fields",
+        receivedData: req.body,
+      });
+    }
+
+    // Create a new quote object
     const newQuote = new Quote(req.body);
+    console.log("Created Quote object:", newQuote);
+
+    // Save to the database
     const savedQuote = await newQuote.save();
+    console.log("Quote saved successfully with ID:", savedQuote._id);
+
     res.status(201).json(savedQuote);
   } catch (error) {
+    console.error("Error saving quote:", error.message);
     res.status(400).json({ message: error.message });
   }
 });
